@@ -54,6 +54,14 @@ const keyBindings = {
   esc: {
     label: 'To Main Layer',
     command: 'TO(_MAIN_MAC)'
+  },
+  backspace: {
+    label: 'CTL',
+    command: 'KC_LCTL'
+  },
+  space: {
+    label: 'Tab',
+    command: 'KC_TAB'
   }
 }
 
