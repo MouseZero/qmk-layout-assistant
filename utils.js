@@ -30,11 +30,11 @@ const utils = {
   }
 }
 
-function getShortcuts (keyBindings) {
+function getShortcuts (keyBindings, layerName) {
   const convertToShortcut = utils.getShortcut(keyBindings)
   const make2DShortcutList = utils.map2D(convertToShortcut)
   const convertLinesToText = shortcuts => shortcuts.map(shortcuts => utils.convertArrayToText(shortcuts))
-  const addFirstLine = array => ['[_VSCODE] = LAYOUT(', ...array]
+  const addFirstLine = array => [`[${layerName}] = LAYOUT(`, ...array]
   const addLastLine = array => [...array, '),']
   const indentLines = array => array.map(x => '  ' + x)
   const removeLastShortcutComma = a => {
