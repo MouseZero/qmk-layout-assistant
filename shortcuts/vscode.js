@@ -1,3 +1,4 @@
+const {flowRight} = require('lodash')
 
 const keyBindings = {
   f: {
@@ -51,37 +52,62 @@ const keyBindings = {
   b: {
     label: 'View Bookmarks',
     command: 'LGUI(LALT(KC_B))'
+  },
+  esc: {
+    label: 'To Main Layer',
+    command: 'TO(_MAIN_MAC)'
   }
 }
 
-const getShortcut = bindings => key => {
-  if (bindings[key]) return bindings[key]['command']
-  return 'KC_TRNS'
+const keyboardLayout = [
+  ['q', 'w', 'e', 'r', 't', 'y', 'u', 'i', 'o', 'p'],
+  ['a', 's', 'd', 'f', 'g', 'h', 'j', 'k', 'l', ';'],
+  ['z', 'x', 'c', 'v', 'b', 'n', 'm', ',', '.', '/'],
+  ['esc', 'tab', 'super', 'shift', 'backspace', 'ctl', 'alt', 'space', 'fn', '-', '\'', 'enter']
+]
+
+const addKeyboarLayout = (obj) => ({keyboardLayout, ...obj})
+
+const utils = {
+  getShortcut: bindings => key => {
+    if (bindings[key]) return bindings[key]['command']
+    return 'KC_TRNS'
+  },
+  map2D: func => array2D => array2D.map(array => array.map(func)),
+  convertArrayToText: array => array.reduce((prev, current) => {
+    return prev + current + ', '
+  }, ''),
+  combinedStrings: array => array.reduce((prev, current) => {
+    return prev + '\n' + current
+  }),
+  pipe: fnArray => startValue => fnArray.reduce((prev, currentFunc) => {
+    return currentFunc(prev)
+  }, startValue),
+  removeLastComma: string => {
+    const lastIndex = string.lastIndexOf(',')
+    return string.slice(0, lastIndex)
+  }
 }
 
-const getLabel = bindings => key => {
-  if (bindings[key]) return bindings[key]['label']
-  return 'N/A'
+const convertToShortcut = utils.getShortcut(keyBindings)
+const make2DShortcutList = utils.map2D(convertToShortcut)
+const convertLinesToText = shortcuts => shortcuts.map(shortcuts => utils.convertArrayToText(shortcuts))
+const addFirstLine = array => ['[_VSCODE] = LAYOUT(', ...array]
+const addLastLine = array => [...array, '),']
+const indentLines = array => array.map(x => '  ' + x)
+const removeLastShortcutComma = a => {
+  a[a.length-1] = utils.removeLastComma(a[a.length-1])
+  return a
 }
 
-const getVSShortcut = getShortcut(keyBindings)
-const getShortcutsFromKeys = keys => keys.map(key => getVSShortcut(key))
-const topRowKeys = ['q', 'w', 'e', 'r', 't', 'y', 'u', 'i', 'o', 'p']
-const middleRowKeys = ['a', 's', 'd', 'f', 'g', 'h', 'j', 'k', 'l', ';']
-const bottomRowKeys = ['z', 'x', 'c', 'v', 'b', 'n', 'm', ',', '.', '/']
-const controlKeys = ['esc', 'tab', 'super', 'shift', 'backspace', 'ctl', 'alt', 'space', 'fn', '-', '\'', 'enter']
+const result = utils.pipe([
+  make2DShortcutList,
+  convertLinesToText,
+  removeLastShortcutComma,
+  indentLines,
+  addFirstLine,
+  addLastLine,
+  utils.combinedStrings
+])(keyboardLayout)
 
-const printNormalRow = getShortcutsFromKeys(topRowKeys).reduce((prev, shortcut) => {
-  return prev + shortcut + ', '
-}, '')
-
-console.log(printNormalRow)
-
-const firstLine = '[_VSCODE] = LAYOUT('
-const lastLine = '),'
-
-  // [_RS] = LAYOUT( /* [> RAISE <] */
-  //   KC_EXLM, KC_AT,   KC_UP,   KC_LCBR, KC_RCBR,                   KC_PGUP, KC_7,    KC_8,   KC_9, KC_ASTR ,
-  //   KC_HASH, KC_LEFT, KC_DOWN, KC_RGHT, KC_DLR,                    KC_PGDN, KC_4,    KC_5,   KC_6, KC_PLUS ,
-  //   KC_LBRC, KC_RBRC, KC_LPRN, KC_RPRN, KC_AMPR,                   KC_GRV,  KC_1,    KC_2,   KC_3, KC_BSLS ,
-  //   TG(_LW), KC_NO,  KC_LGUI, KC_LSFT, KC_BSPC, KC_LCTL, KC_LALT, KC_SPC,  KC_TRNS, KC_DOT, KC_0, KC_EQL  ),
+console.log(result)
